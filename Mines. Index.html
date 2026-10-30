@@ -1,0 +1,235 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MINES IA PRO V2</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;padding:15px;background:#080f20;
+ color:white;font-family:Arial,sans-serif
+}
+header{
+ display:flex;justify-content:space-between;
+ align-items:flex-start;margin-bottom:20px
+}
+h1{font-size:23px;color:#35c5e7;margin:0 0 8px}
+.identity{font-size:11px;color:#8adbea}
+.clock{text-align:right;color:#80d8ed;font-size:12px}
+.panel{
+ background:#111a31;border:1px solid #29445f;
+ border-radius:20px;padding:15px;margin-bottom:15px
+}
+.center{text-align:center}
+.label{color:#48cce8;font-weight:bold;margin-bottom:15px}
+.levels{display:flex;gap:7px;margin-bottom:17px}
+button{
+ border:0;border-radius:10px;padding:13px;
+ background:#1b3049;color:white;font-weight:bold
+}
+.levels button{flex:1}
+button.active{background:#079cbd}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.cell{
+ aspect-ratio:1;border-radius:13px;
+ background:linear-gradient(145deg,#27b8d6,#07536c);
+ border:3px solid #31516b;color:white;
+ font-size:25px;font-weight:bold;
+ display:flex;align-items:center;justify-content:center;
+ padding:0
+}
+.star{background:#126044;border-color:#31d99b}
+.mine{background:#702e47;border-color:#ff718d}
+.main{
+ width:100%;margin-top:15px;
+ background:linear-gradient(90deg,#078bb4,#2bc9e6);
+ font-size:15px
+}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{
+ background:#192943;border-radius:12px;padding:13px;
+ text-align:center;font-size:13px
+}
+.stat strong{display:block;font-size:23px;margin-top:7px}
+.green{color:#42e5a4}
+.red{color:#ff7894}
+.note{font-size:11px;color:#a6bacb;line-height:1.6}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div>
+  <h1>MINES IA PRO</h1>
+   
+  <div class="identity">ID: 350475575</div>
+ </div>
+ <div class="clock">
+  <div id="date"></div>
+  <div id="time"></div>
+ </div>
+</header>
+
+<div class="panel">
+ <div class="center label">SIMULATEUR MINES 5 × 5</div>
+
+<div class="levels">
+  <bouton class="active" onclick="choose(1,this)">1 PIÈGES</bouton>
+  <button onclick="choose(3,this)">3 PIÈGES</button>
+  <button onclick="choose(5,this)">5 PIÈGES</button>
+  <button onclick="choose(7,this)">7 PIÈGES</button>
+ </div>
+
+ <div class="grid" id="grid"></div>
+
+ <button class="main" onclick="simulate()">
+     Prédir
+ </button>
+
+ <button class="main" onclick="resetGrid()"
+ style="background:#34475e">
+     Rénitialiser
+ </button>
+</div>
+
+<div class="panel">
+ <div class="center label">PROBABILITÉS THÉORIQUES</div>
+ <div class="stats">
+  <div class="stat">
+   ⭐ ÉTOILE
+   <strong class="green" id="starProb">88 %</strong>
+  </div>
+  <div class="stat">
+   ❌ PIÈGE
+   <strong class="red" id="mineProb">12 %</strong>
+  </div>
+  <div class="stat">
+   CASES ÉTOILES
+   <strong id="stars">22</strong>
+  </div>
+  <div class="stat">
+   CASES PIÈGES
+   <strong id="mines">3</strong>
+  </div>
+ </div>
+ <p class="note center" id="status">
+ Choisis un niveau puis lance une simulation.
+ </p>
+</div>
+
+<div class="panel center">
+ <div class="label">INFORMATIONS</div>
+ <p class="note">
+ MINES IA PRO — Algorithme Hacker.<br>
+   
+          ID: 350475575<br>
+    Algorithme Hacker. 1win MINES BOT
+ </p>
+</div>
+
+<script>
+let level=3;
+let results=[];
+let revealed=false;
+
+function choose(n,btn){
+ level=n;
+ document.querySelectorAll(".levels button")
+ .forEach(b=>b.classList.remove("active"));
+ btn.classList.add("active");
+ resetGrid();
+}
+
+function createGrid(){
+ const grid=document.getElementById("grid");
+ grid.innerHTML="";
+
+ for(let i=0;i<25;i++){
+  let cell=document.createElement("button");
+  cell.className="cell";
+  cell.textContent="?";
+  cell.onclick=()=>revealCell(i,cell);
+  grid.appendChild(cell);
+ }
+}
+
+function simulate(){
+ results=Array(25).fill("⭐");
+ let positions=Array.from({length:25},(_,i)=>i);
+
+ for(let i=24;i>0;i--){
+  let j=Math.floor(Math.random()*(i+1));
+  [positions[i],positions[j]]=
+  [positions[j],positions[i]];
+ }
+
+ for(let i=0;i<level;i++){
+  results[positions[i]]="❌";
+ }
+
+ revealed=true;
+
+ document.querySelectorAll(".cell").forEach((cell,i)=>{
+  cell.textContent=results[i];
+  cell.className="cell "+
+  (results[i]==="⭐"?"star":"mine");
+ });
+
+ updateStats();
+
+ document.getElementById("status").textContent=
+ "Simulation terminée : résultats de démonstration.";
+}
+
+function revealCell(i,cell){
+ if(!revealed){
+  document.getElementById("status").textContent=
+  "Lance d'abord une simulation.";
+  return;
+ }
+ cell.textContent=results[i];
+ cell.className="cell "+
+ (results[i]==="⭐"?"star":"mine");
+}
+
+function updateStats(){
+ document.getElementById("starProb").textContent=
+ ((25-level)/25*100).toFixed(0)+" %";
+
+ document.getElementById("mineProb").textContent=
+ (level/25*100).toFixed(0)+" %";
+
+ document.getElementById("stars").textContent=25-level;
+ document.getElementById("mines").textContent=level;
+}
+
+function resetGrid(){
+ revealed=false;
+ results=[];
+ createGrid();
+ updateStats();
+ document.getElementById("status").textContent=
+ "Nouvelle simulation prête.";
+}
+
+function clock(){
+ let d=new Date();
+ document.getElementById("date").textContent=
+ d.toLocaleDateString("fr-FR");
+
+ document.getElementById("time").textContent=
+ d.toLocaleTimeString("fr-FR");
+}
+
+createGrid();
+updateStats();
+clock();
+setInterval(clock,1000);
+</script>
+
+</body>
+</html>
